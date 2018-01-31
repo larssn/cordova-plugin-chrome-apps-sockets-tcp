@@ -422,11 +422,12 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
     }
 }
 
-- (NSDictionary*)buildErrorInfoWithErrorCode:(NSInteger)theErrorCode message:(NSString*)message
+- (NSDictionary*)buildErrorInfoWithErrorCode:(NSInteger)theErrorCode message:(NSString*)message socketId:(NSNumber*)socketId
 {
     return @{
         @"resultCode": [NSNumber numberWithInteger:theErrorCode],
         @"message": message,
+        @"socketId": socketId
     };
 }
 
@@ -479,7 +480,7 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
     ChromeSocketsTcpSocket* socket = _sockets[socketId];
 
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"Invalid Argument"]] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"No socket with that ID" socketId:socketId]] callbackId:command.callbackId];
         return;
     }
 
@@ -488,7 +489,7 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
         if (success) {
             [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
         } else {
-            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription]]] callbackId:command.callbackId];
+            [commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:[error code] message:[error localizedDescription] socketId:socketId]] callbackId:command.callbackId];
         }
     } copy];
 
@@ -556,7 +557,7 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
     ChromeSocketsTcpSocket* socket = _sockets[socketId];
 
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"Invalid Argument"]] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"No socket with that ID" socketId:socketId]] callbackId:command.callbackId];
         return;
     }
 
@@ -592,7 +593,7 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
     ChromeSocketsTcpSocket* socket = _sockets[socketId];
 
     if (socket == nil) {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"Invalid Argument"]] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTSOCK message:@"No socket with that ID" socketId:socketId]] callbackId:command.callbackId];
         return;
     }
 
@@ -606,7 +607,7 @@ NSTimeInterval const PIPE_TO_FILE_PROGRESS_INTERVAL = 0.1;
         [socket->_socket writeData:data withTimeout:-1 tag:-1];
 
     } else {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTCONN message:@"Socket Not Connected"]] callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self buildErrorInfoWithErrorCode:ENOTCONN message:@"Socket Not Connected" socketId:socketId]] callbackId:command.callbackId];
     }
 }
 

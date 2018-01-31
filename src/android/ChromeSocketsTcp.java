@@ -102,12 +102,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     stopSelectorThread();
   }
 
-  private JSONObject buildErrorInfo(int code, String message) {
+  private JSONObject buildErrorInfo(int code, String message, int socketId) {
 
     JSONObject error = new JSONObject();
     try {
       error.put("message", message);
       error.put("resultCode", code);
+      error.put("socketId", socketId);
     } catch (JSONException e) {
     }
     return error;
@@ -191,7 +192,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
+      callbackContext.error(buildErrorInfo(-4, "No socket with that ID", socketId));
       return;
     }
 
@@ -199,7 +200,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       socket.setKeepAlive(enable);
       callbackContext.success();
     } catch (SocketException e) {
-      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
+      callbackContext.error(buildErrorInfo(-2, e.getMessage(), socketId));
     }
   }
 
@@ -212,7 +213,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
+      callbackContext.error(buildErrorInfo(-4, "No socket with that ID", socketId));
       return;
     }
 
@@ -220,7 +221,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       socket.setNoDelay(noDelay);
       callbackContext.success();
     } catch (SocketException e) {
-      callbackContext.error(buildErrorInfo(-2, e.getMessage()));
+      callbackContext.error(buildErrorInfo(-2, e.getMessage(), socketId));
     }
   }
 
@@ -236,7 +237,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
       public void run() {
         if (socket == null) {
           Log.e(LOG_TAG, "No socket with socketId " + socketId);
-          callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
+          callbackContext.error(buildErrorInfo(-4, "No socket with that ID", socketId));
           return;
         }
 
@@ -247,7 +248,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
             addSelectorMessage(socket, SelectorMessageType.SO_CONNECT, null);
           }
         } catch (IOException e) {
-          callbackContext.error(buildErrorInfo(-104, e.getMessage()));
+          callbackContext.error(buildErrorInfo(-104, e.getMessage(), socketId));
         }
       }
     });
@@ -276,13 +277,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
+      callbackContext.error(buildErrorInfo(-4, "No socket with that ID", socketId));
       return;
     }
 
     if (!socket.isConnected()) {
       Log.e(LOG_TAG, "Socket is not connected with host " + socketId);
-      callbackContext.error(buildErrorInfo(-15, "Socket not connected"));
+      callbackContext.error(buildErrorInfo(-15, "Socket not connected", socketId));
       return;
     }
 
@@ -313,13 +314,13 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     if (socket == null) {
       Log.e(LOG_TAG, "No socket with socketId " + socketId);
-      callbackContext.error(buildErrorInfo(-4, "Invalid Argument"));
+      callbackContext.error(buildErrorInfo(-4, "No socket with that ID", socketId));
       return;
     }
 
     if (!socket.isConnected()) {
       Log.e(LOG_TAG, "Socket is not connected with host " + socketId);
-      callbackContext.error(buildErrorInfo(-15, "Socket not connected"));
+      callbackContext.error(buildErrorInfo(-15, "Socket not connected", socketId));
       return;
     }
 
@@ -396,7 +397,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
         if (errMessage != null) {
           try {
-            JSONObject info = buildErrorInfo(-1000, errMessage);
+            JSONObject info = buildErrorInfo(-1000, errMessage, socketId);
             info.put("socketId", socketId);
             sendReceiveEvent(new PluginResult(Status.ERROR, info));
           } catch (JSONException e) {
@@ -532,7 +533,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         } catch (InterruptedException e) {
         } catch (IOException e) {
           if (msg.callbackContext != null)
-            msg.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
+            msg.callbackContext.error(buildErrorInfo(-2, e.getMessage(), Integer.valueOf(msg.socket.getSocketId())));
         } catch (JSONException e) {
         }
       }
@@ -808,7 +809,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
           }
           return connected;
         } catch (IOException e) {
-          connectCallback.error(buildErrorInfo(-104, e.getMessage()));
+          connectCallback.error(buildErrorInfo(-104, e.getMessage(), socketId));
           connectCallback = null;
         }
       }
@@ -863,7 +864,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
 
     void handshakeFailed() {
       if (secureCallback != null) {
-        secureCallback.error(buildErrorInfo(-148, "SSL handshake not completed"));
+        secureCallback.error(buildErrorInfo(-148, "SSL handshake not completed", socketId));
         secureCallback = null;
       }
       tearDownSSLEngine();
@@ -1077,7 +1078,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
         }
       } catch (InterruptedException e) {
       } catch (IOException e) {
-        sendPacket.callbackContext.error(buildErrorInfo(-2, e.getMessage()));
+        sendPacket.callbackContext.error(buildErrorInfo(-2, e.getMessage(), socketId));
       }
     }
 
@@ -1108,7 +1109,7 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     // This method can be only called by selector thread.
     private void onReadError(int resultCode, Exception error) {
       try {
-        JSONObject info = buildErrorInfo(resultCode, error.getMessage());
+        JSONObject info = buildErrorInfo(resultCode, error.getMessage(), socketId);
         info.put("socketId", socketId);
         info.put("e", error);
         sendReceiveEvent(new PluginResult(Status.ERROR, info));

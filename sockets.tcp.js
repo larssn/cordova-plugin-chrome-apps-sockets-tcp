@@ -82,6 +82,16 @@ exports.connect = function(socketId, peerAddress, peerPort, callback) {
     exec(win, fail, 'ChromeSocketsTcp', 'connect', [socketId, peerAddress, peerPort]);
 };
 
+exports.connect2 = function(socketId, peerAddress, peerPort, callback) {
+    var win = callback && function() {
+        callback(null, 0);
+    };
+    var fail = callback && function(error) {
+        callback(error);
+    };
+    exec(win, fail, 'ChromeSocketsTcp', 'connect', [socketId, peerAddress, peerPort]);
+};
+
 exports.disconnect = function(socketId, callback) {
     exec(callback, null, 'ChromeSocketsTcp', 'disconnect', [socketId]);
 };
