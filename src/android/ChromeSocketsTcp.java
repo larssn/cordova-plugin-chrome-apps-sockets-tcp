@@ -776,27 +776,30 @@ public class ChromeSocketsTcp extends CordovaPlugin {
     }
 
     boolean connect(String address, int port, CallbackContext connectCallback) throws IOException {
+      if (channel.isConnectionPending()) {
+        channel.finishConnect();
+      }
+
       if (!channel.isOpen()) {
         channel = SocketChannel.open();
         channel.configureBlocking(false);
         setBufferSize();
       }
 
-      boolean connected = false;
       try {
-        connected = channel.connect(new InetSocketAddress(address, port));
+        channel.connect(new InetSocketAddress(address, port));
       } catch (UnresolvedAddressException e) {
         String errorMesssage = e.getMessage() != null ? e.getMessage() : "UnresolvedAddressException occured while connecting to socket";
         connectCallback.error(errorMesssage);
       }
 
-      if (connected) {
+      if (channel.isConnected()) {
         connectCallback.success();
       } else {
         this.connectCallback = connectCallback;
       }
 
-      return connected;
+      return channel.isConnected();
     }
 
     boolean finishConnect() {
