@@ -82,7 +82,7 @@ exports.connect = function(socketId, peerAddress, peerPort, callback) {
     exec(win, fail, 'ChromeSocketsTcp', 'connect', [socketId, peerAddress, peerPort]);
 };
 
-exports.connect2 = function(socketId, peerAddress, peerPort, callback) {
+exports.connectV2 = function(socketId, peerAddress, peerPort, callback) {
     var win = callback && function() {
         callback(null, 0);
     };
@@ -110,6 +110,20 @@ exports.secure = function(socketId, options, callback) {
     exec(win, fail, 'ChromeSocketsTcp', 'secure', [socketId, options]);
 };
 
+exports.secureV2 = function(socketId, options, callback) {
+    if (typeof options == 'function') {
+        callback = options;
+        options = {};
+    }
+    var win = callback && function() {
+        callback(null, 0);
+    };
+    var fail = callback && function(error) {
+        callback(error);
+    };
+    exec(win, fail, 'ChromeSocketsTcp', 'secure', [socketId, options]);
+};
+
 exports.send = function(socketId, data, callback) {
     var type = Object.prototype.toString.call(data).slice(8, -1);
     if (type != 'ArrayBuffer') {
@@ -128,6 +142,28 @@ exports.send = function(socketId, data, callback) {
             resultCode: error.resultCode
         };
          exports.onReceiveError.fire(error, sendInfo);
+    };
+    if (data.byteLength == 0) {
+      win(0);
+    } else {
+      exec(win, fail, 'ChromeSocketsTcp', 'send', [socketId, data]);
+    }
+};
+
+exports.sendV2 = function(socketId, data, callback) {
+    var type = Object.prototype.toString.call(data).slice(8, -1);
+    if (type != 'ArrayBuffer') {
+        throw new Error('chrome.sockets.tcp.send - data is not an Array Buffer! (Got: ' + type + ')');
+    }
+    var win = callback && function(bytesSent) {
+        var sendInfo = {
+            bytesSent: bytesSent,
+            resultCode: 0
+        };
+        callback(null, sendInfo);
+    };
+    var fail = callback && function(error) {
+         callback(error);
     };
     if (data.byteLength == 0) {
       win(0);
